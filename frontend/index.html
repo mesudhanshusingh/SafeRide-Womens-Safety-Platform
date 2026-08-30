@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeRide – Smart Women Safety Platform</title>
+    <meta name="description" content="SafeRide leverages real-time telemetry, location tracking, threat analytics, and verified networks to ensure safe travel.">
+    
+    <!-- CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- SOS COUNTDOWN OVERLAY                      -->
+    <!-- ========================================== -->
+    <div id="sos-countdown-overlay" class="safety-overlay d-none-section">
+        <div class="card glass-panel safety-check-dialog border-danger">
+            <h2 class="text-danger glow-text-danger"><i class="fas fa-radiation-alt fa-spin me-2"></i> TRIGGERING SOS</h2>
+            <p class="text-muted mt-2">Sending emergency GPS locations and starting audio/video recordings in...</p>
+            <div id="sos-countdown-sec" class="timer-countdown-number">5</div>
+            <button id="btn-cancel-sos" class="btn btn-outline-light w-100 mt-3" onclick="cancelSosCountdown(); return false;">
+                <i class="fas fa-times me-2"></i> Cancel SOS Alert
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- FLOATING SAFETY CHECK-IN DIALOG            -->
+    <!-- ========================================== -->
+    <div id="safety-check-modal" class="safety-overlay d-none-section" id="safetyCheckModal">
+        <div class="card glass-panel safety-check-dialog border-warning">
+            <h2 class="text-warning"><i class="fas fa-user-shield me-2"></i> SAFETY AUTO CHECK-IN</h2>
+            <p class="text-muted mt-2">Confirm that you are safe. If you do not respond, emergency dispatch will activate.</p>
+            <div id="checkin-timer-value" class="timer-countdown-number text-warning">10</div>
+            <div class="d-flex gap-3">
+                <button id="btn-checkin-safe" class="btn btn-success w-100 py-2 fw-bold" id="checkinSafeBtn">
+                    <i class="fas fa-check me-2"></i> I am Safe
+                </button>
+                <button id="btn-checkin-danger" class="btn btn-danger w-100 py-2 fw-bold" id="checkinDangerBtn">
+                    <i class="fas fa-exclamation-triangle me-2"></i> In Danger
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- ========================================== -->
+    <!-- AUTHENTICATION PANELS (LOGIN & REGISTER)   -->
+    <!-- ========================================== -->
+    <div id="auth-container" class="auth-wrapper">
+        <!-- Floating Abstract Background Blobs -->
+        <div class="auth-bg-shapes">
+            <div class="auth-shape auth-shape-1"></div>
+            <div class="auth-shape auth-shape-2"></div>
+            <div class="auth-shape auth-shape-3"></div>
+        </div>
+
+        <!-- Login Card -->
+        <div id="login-card" class="card glass-panel auth-card">
+            <div class="text-center mb-4">
+                <h1 class="h3 fw-bold text-white glow-text-primary"><i class="fas fa-user-shield text-info me-2"></i> SafeRide</h1>
+                <p class="text-muted">Smart Women Safety Platform Login</p>
+            </div>
+            <form id="login-form">
+                <div class="mb-3">
+                    <label for="login-email" class="form-label text-muted">Email address</label>
+                    <input type="email" class="form-control bg-dark text-white border-glass" id="login-email" required value="sudhanshu@example.com" placeholder="sudhanshu@example.com">
+                </div>
+                <div class="mb-4">
+                    <label for="login-password" class="form-label text-muted">Password</label>
+                    <input type="password" class="form-control bg-dark text-white border-glass" id="login-password" required value="password123" placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn glow-btn-primary w-100 py-2 mb-3">Sign In</button>
+                <div class="text-center small mb-3">
+                    <span class="text-muted">Don't have an account?</span> 
+                    <a href="#" id="btn-goto-register" class="text-info text-decoration-none ms-1">Register here</a>
+                </div>
+            </form>
+            <div class="designer-profile text-center pt-3 border-top border-glass">
+                <span class="text-muted small d-block mb-2" style="font-size: 0.8rem;">Designed by <strong>Sudhanshu</strong></span>
+                <div class="d-flex justify-content-center gap-3 social-links">
+                    <a href="https://www.instagram.com/mesudhanshusingh?igsh=emliZ3JkZTE5cDY5" target="_blank" class="text-muted" title="Instagram"><i class="fab fa-instagram fa-lg"></i></a>
+                    <a href="https://www.linkedin.com/in/sudhanshu-singh-777525276/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3Bd56VKEp%2FRq%2B%2BeDteBZBMCw%3D%3D" target="_blank" class="text-muted" title="LinkedIn"><i class="fab fa-linkedin fa-lg"></i></a>
+                    <a href="https://x.com/mesudhanshusingh" target="_blank" class="text-muted" title="X (Twitter)"><i class="fab fa-x-twitter fa-lg"></i></a>
+                    <a href="https://github.com/mesudhanshusingh" target="_blank" class="text-muted" title="GitHub"><i class="fab fa-github fa-lg"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Register Card -->
+        <div id="register-card" class="card glass-panel auth-card d-none-section">
+            <div class="text-center mb-4">
+                <h1 class="h3 fw-bold text-white glow-text-primary"><i class="fas fa-user-plus text-info me-2"></i> Join SafeRide</h1>
+                <p class="text-muted">Create your secure passenger profile</p>
+            </div>
+            <form id="register-form">
+                <div class="mb-3">
+                    <label for="reg-name" class="form-label text-muted">Full Name</label>
+                    <input type="text" class="form-control bg-dark text-white border-glass" id="reg-name" required placeholder="Sudhanshu">
+                </div>
+                <div class="mb-3">
+                    <label for="reg-email" class="form-label text-muted">Email Address</label>
+                    <input type="email" class="form-control bg-dark text-white border-glass" id="reg-email" required placeholder="sudhanshu@example.com">
+                </div>
+                <div class="mb-3">
+                    <label for="reg-phone" class="form-label text-muted">Phone Number</label>
+                    <input type="tel" class="form-control bg-dark text-white border-glass" id="reg-phone" required placeholder="+919876543200">
+                </div>
+                <div class="mb-3">
+                    <label for="reg-password" class="form-label text-muted">Password</label>
+                    <input type="password" class="form-control bg-dark text-white border-glass" id="reg-password" required placeholder="••••••••">
+                </div>
+                <div class="mb-4">
+                    <label for="reg-passcode" class="form-label text-muted">Emergency Deactivation Passcode (4 Digits)</label>
+                    <input type="text" class="form-control bg-dark text-white border-glass" id="reg-passcode" pattern="[0-9]{4}" required placeholder="9999">
+                </div>
+                <button type="submit" class="btn glow-btn-primary w-100 py-2 mb-3">Create Account</button>
+                <div class="text-center small mb-3">
+                    <span class="text-muted">Already have an account?</span> 
+                    <a href="#" id="btn-goto-login" class="text-info text-decoration-none ms-1">Sign In</a>
+                </div>
+            </form>
+            <div class="designer-profile text-center pt-3 border-top border-glass">
+                <span class="text-muted small d-block mb-2" style="font-size: 0.8rem;">Designed by <strong>Sudhanshu</strong></span>
+                <div class="d-flex justify-content-center gap-3 social-links">
+                    <a href="https://www.instagram.com/mesudhanshusingh?igsh=emliZ3JkZTE5cDY5" target="_blank" class="text-muted" title="Instagram"><i class="fab fa-instagram fa-lg"></i></a>
+                    <a href="https://www.linkedin.com/in/sudhanshu-singh-777525276/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3Bd56VKEp%2FRq%2B%2BeDteBZBMCw%3D%3D" target="_blank" class="text-muted" title="LinkedIn"><i class="fab fa-linkedin fa-lg"></i></a>
+                    <a href="https://x.com/mesudhanshusingh" target="_blank" class="text-muted" title="X (Twitter)"><i class="fab fa-x-twitter fa-lg"></i></a>
+                    <a href="https://github.com/mesudhanshusingh" target="_blank" class="text-muted" title="GitHub"><i class="fab fa-github fa-lg"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MAIN APPLICATION GRID INTERFACE            -->
+    <!-- ========================================== -->
+    <div id="main-app-container" class="container-fluid p-0 d-none-section">
+        <div id="app-layout">
+            
+            <!-- 1. LEFT SIDEBAR PANEL -->
+            <aside id="sidebar">
+                <div class="sidebar-header">
+                    <i class="fas fa-shield-alt text-info fa-2x"></i>
+                    <div>
+                        <h4 class="h5 fw-bold text-white mb-0">SafeRide</h4>
+                        <small class="text-muted">Smart Travel Safety</small>
+                    </div>
+                    <button id="btn-close-sidebar" class="btn text-muted d-md-none ms-auto border-0 p-0" style="font-size: 1.25rem;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <nav class="sidebar-menu">
+                    <a href="#" id="nav-dashboard" class="sidebar-item active" onclick="switchTab('nav-dashboard', 'dashboard-panel'); return false;">
+                        <i class="fas fa-chart-line"></i> Home Dashboard
+                    </a>
+                    <a href="#" id="nav-map" class="sidebar-item" onclick="switchTab('nav-map', 'map-panel'); return false;">
+                        <i class="fas fa-map-marked-alt"></i> Safe Map & Routes
+                    </a>
+                    <a href="#" id="nav-circle" class="sidebar-item" onclick="switchTab('nav-circle', 'circle-panel'); if (typeof loadTrustedContacts==='function') loadTrustedContacts(); return false;">
+                        <i class="fas fa-users-cog"></i> Trusted Contacts
+                    </a>
+                    <a href="#" id="nav-driver" class="sidebar-item" onclick="switchTab('nav-driver', 'driver-panel'); return false;">
+                        <i class="fas fa-id-card"></i> Verify Driver
+                    </a>
+                    <a href="#" id="nav-complaints" class="sidebar-item" onclick="switchTab('nav-complaints', 'complaints-panel'); if (typeof loadMyComplaints==='function') loadMyComplaints(); return false;">
+                        <i class="fas fa-exclamation-circle"></i> Incident Portal
+                    </a>
+                    <a href="#" id="nav-alerts" class="sidebar-item" onclick="switchTab('nav-alerts', 'alerts-panel'); if (typeof loadCommunityAlerts==='function') loadCommunityAlerts(); return false;">
+                        <i class="fas fa-bullhorn"></i> Community Alerts
+                    </a>
+                    <a href="#" id="nav-chatbot" class="sidebar-item" onclick="switchTab('nav-chatbot', 'chatbot-panel'); return false;">
+                        <i class="fas fa-robot"></i> Safety AI Chatbot
+                    </a>
+                    <a href="#" id="nav-admin" class="sidebar-item" onclick="switchTab('nav-admin', 'admin-panel'); if (typeof loadAdminPanel==='function') loadAdminPanel(); return false;">
+                        <i class="fas fa-user-cog"></i> Admin Panel
+                    </a>
+                </nav>
+                
+                <div class="sidebar-footer">
+                    <a href="#" id="logout-link" class="sidebar-item text-danger border-0 mb-3">
+                        <i class="fas fa-sign-out-alt"></i> Log Out
+                    </a>
+                    <div class="designer-profile text-center pt-2" style="border-top: 1px solid var(--border-glass);">
+                        <span class="text-muted small d-block mb-2" style="font-size: 0.8rem;">Designed by <strong>Sudhanshu</strong></span>
+                        <div class="d-flex justify-content-center gap-3 social-links">
+                            <a href="https://www.instagram.com/mesudhanshusingh?igsh=emliZ3JkZTE5cDY5" target="_blank" class="text-muted" title="Instagram"><i class="fab fa-instagram fa-lg"></i></a>
+                            <a href="https://www.linkedin.com/in/sudhanshu-singh-777525276/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3Bd56VKEp%2FRq%2B%2BeDteBZBMCw%3D%3D" target="_blank" class="text-muted" title="LinkedIn"><i class="fab fa-linkedin fa-lg"></i></a>
+                            <a href="https://x.com/mesudhanshusingh" target="_blank" class="text-muted" title="X (Twitter)"><i class="fab fa-x-twitter fa-lg"></i></a>
+                            <a href="https://github.com/mesudhanshusingh" target="_blank" class="text-muted" title="GitHub"><i class="fab fa-github fa-lg"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 2. RIGHT CONTENT VIEWPORT -->
+            <main id="content-area">
+                
+                <!-- HEADER BAR -->
+                <header id="top-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <button id="btn-toggle-sidebar" class="btn btn-outline-light border-glass text-white d-md-none p-2 lh-1" style="border-radius: 8px;">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-user-circle text-muted fa-lg"></i>
+                        <div>
+                            <span id="user-name-display" class="fw-bold text-white block small">Passenger Profile</span>
+                            <br>
+                            <small id="user-role-display" class="text-info block" style="font-size: 0.75rem; margin-top: -4px;">ROLE_USER</small>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- ========================================== -->
+                <!-- TAB 1: HOME DASHBOARD                      -->
+                <!-- ========================================== -->
+                <section id="dashboard-panel" class="app-panel">
+                    
+                    <!-- ALERT CARD IF SOS ACTIVE -->
+                    <div id="active-sos-alert-card" class="m-4 mb-0 alert alert-danger bg-danger bg-opacity-10 border-danger text-white d-none-section">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="alert-heading h5 fw-bold text-danger"><i class="fas fa-exclamation-triangle fa-pulse me-2"></i> EMERGENCY SOS ALARM ACTIVE</h4>
+                                <p class="mb-0 small text-muted">Broadcasting locations and audio/video records. Authorities are notified.</p>
+                            </div>
+                            <button id="btn-resolve-sos-active" class="btn btn-outline-danger btn-sm" onclick="resolveActiveSos(); return false;">Resolve SOS Alert</button>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        
+                        <!-- SOS CARD -->
+                        <div class="card glass-panel text-center p-4 shadow-sm">
+                            <h2 class="h5 fw-bold mb-3 text-white">EMERGENCY SOS</h2>
+                            <p class="text-muted small">Tap to trigger countdown and alert your trusted network immediately.</p>
+                            <div class="sos-trigger-box">
+                                <button id="btn-big-sos" class="sos-glow-button" onclick="triggerSosCountdown(); return false;">
+                                    <div class="sos-pulse-ring"></div>
+                                    SOS
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- RISK OVERVIEW WIDGET -->
+                        <div class="card glass-panel p-4 shadow-sm">
+                            <h2 class="h5 fw-bold mb-3 text-white">AI Safety Index</h2>
+                            <div class="d-flex justify-content-around align-items-center mb-4">
+                                <div class="safety-gauge">
+                                    <span id="home-safety-score" class="safety-value">92%</span>
+                                </div>
+                                <div>
+                                    <span id="home-risk-badge" class="risk-badge risk-low">LOW RISK</span>
+                                    <div class="text-muted small mt-2">Area Crime: Low</div>
+                                    <div class="text-muted small">Telematics: Stable</div>
+                                </div>
+                            </div>
+                            <h3 class="h6 fw-bold text-muted border-bottom border-glass pb-2 mb-2">Safety Suggestions</h3>
+                            <ul id="home-recommendations" class="list-group">
+                                <!-- Populated dynamically -->
+                            </ul>
+                        </div>
+
+                        <!-- STATS WRAPPER -->
+                        <div class="d-flex flex-column gap-3">
+                            <div class="card glass-panel stat-card" onclick="switchTab('nav-circle', 'circle-panel'); if (typeof loadTrustedContacts==='function') loadTrustedContacts(); return false;" style="cursor: pointer;" title="Click to view Trusted Contacts">
+                                <div>
+                                    <div class="text-muted small">Trusted Contacts</div>
+                                    <h3 id="stat-trusted-count" class="h2 fw-bold text-white mb-0">0</h3>
+                                </div>
+                                <i class="fas fa-users-cog stat-icon text-info"></i>
+                            </div>
+                            <div class="card glass-panel stat-card" onclick="switchTab('nav-alerts', 'alerts-panel'); if (typeof loadCommunityAlerts==='function') loadCommunityAlerts(); return false;" style="cursor: pointer;" title="Click to view Community Warnings">
+                                <div>
+                                    <div class="text-muted small">Community Warnings</div>
+                                    <h3 id="stat-alerts-count" class="h2 fw-bold text-white mb-0">0</h3>
+                                </div>
+                                <i class="fas fa-bullhorn stat-icon text-warning"></i>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ACTIVE RIDE STATUS PANEL -->
+                    <div class="mx-4 mb-4 card glass-panel p-4">
+                        <h2 class="h5 fw-bold mb-3 text-white"><i class="fas fa-map-marker-alt text-info me-2"></i> Ride Safety Status</h2>
+                        <p id="tracking-status-text" class="text-muted mb-3">Platform idle. Board a vehicle to activate live tracking controls.</p>
+                        
+                        <div id="active-ride-stats-panel" class="d-none-section">
+                            <div class="progress bg-dark mb-3" style="height: 6px;">
+                                <div class="progress-bar bg-info progress-bar-striped progress-bar-animated" role="progressbar" style="width: 75%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Periodic Check-In intervals: Active (45s)</small>
+                                </div>
+                                <button id="btn-end-ride" class="btn btn-sm glow-btn-danger">End Ride & Stop Sharing</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- ========================================== -->
+                <!-- TAB 2: SAFE MAPS & ROUTING                 -->
+                <!-- ========================================== -->
+                <section id="map-panel" class="app-panel d-none-section m-4">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div id="map-container"></div>
+                            <p class="text-muted small mt-2"><i class="fas fa-info-circle me-1"></i> Tip: Use the map to choose a destination. Crime-prone zones are highlighted in transparent red circles.</p>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card glass-panel p-3 h-100">
+                                <h2 class="h5 fw-bold mb-3 text-white"><i class="fas fa-route text-primary me-2"></i> Plan Safe Ride</h2>
+                                
+                                <form id="ride-setup-form">
+                                    <div class="mb-2">
+                                        <label class="small text-muted mb-1">Enter Vehicle Number</label>
+                                        <input type="text" id="ride-cab-number" class="form-control form-control-sm bg-dark text-white border-glass" placeholder="MH-12-AB-1234" required>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="small text-muted mb-1">Vehicle Type</label>
+                                        <select id="ride-vehicle-type" class="form-select form-select-sm bg-dark text-white border-glass">
+                                            <option value="CAB">Cab / Taxi</option>
+                                            <option value="AUTO">Auto Rickshaw</option>
+                                            <option value="BUS">Bus Transit</option>
+                                            <option value="WALKING">Walking Alone</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="small text-muted mb-1">Destination Name</label>
+                                        <input type="text" id="ride-dest-name" class="form-control form-control-sm bg-dark text-white border-glass" readonly placeholder="Click on Map to select" required>
+                                        <input type="hidden" id="ride-dest-lat">
+                                        <input type="hidden" id="ride-dest-lng">
+                                    </div>
+                                    
+                                    <button type="button" id="btn-re-calc-route" class="btn btn-sm btn-outline-info w-100 mb-2">
+                                        <i class="fas fa-brain me-1"></i> Calculate Safety Routes
+                                    </button>
+                                    <button type="submit" class="btn btn-sm glow-btn-primary w-100">
+                                        <i class="fas fa-play-circle me-1"></i> Start Protected Ride
+                                    </button>
+                                </form>
+
+                                <hr class="border-glass">
+                                <h3 class="h6 fw-bold text-white mb-2">Available Routes</h3>
+                                <div id="route-cards-list" class="overflow-y-auto" style="max-height: 180px;">
+                                    <span class="text-muted small">Select your destination and click Calculate to load route ratings.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- TAB 3: TRUSTED CIRCLE                      -->
+                <!-- ========================================== -->
+                <section id="circle-panel" class="app-panel d-none-section m-4">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card glass-panel p-4 h-100">
+                                <h2 class="h5 fw-bold mb-3 text-white"><i class="fas fa-users text-info me-2"></i> Trusted Family & Friends</h2>
+                                <p class="text-muted small">The contacts configured here will receive real-time location SMS alerts and video/audio logs in the event of an SOS activation.</p>
+                                
+                                <div id="contacts-list-container" class="mt-3">
+                                    <!-- Dynamic -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card glass-panel p-4 h-100">
+                                <h2 class="h5 fw-bold mb-3 text-white"><i class="fas fa-user-plus text-primary me-2"></i> Add Contact</h2>
+                                <form id="contact-add-form">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Contact Name</label>
+                                        <input type="text" id="tc-name" class="form-control bg-dark text-white border-glass" placeholder="Anil Sharma" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Phone Number</label>
+                                        <input type="tel" id="tc-phone" class="form-control bg-dark text-white border-glass" placeholder="+919876543209" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Email Address</label>
+                                        <input type="email" id="tc-email" class="form-control bg-dark text-white border-glass" placeholder="family@example.com" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Relationship</label>
+                                        <input type="text" id="tc-relation" class="form-control bg-dark text-white border-glass" placeholder="Parent / Spouse / Friend" required>
+                                    </div>
+                                    <button type="submit" class="btn glow-btn-primary w-100">Add to Safety Circle</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- TAB 4: VERIFY DRIVERS                      -->
+                <!-- ========================================== -->
+                <section id="driver-panel" class="app-panel d-none-section m-4">
+                    <div class="card glass-panel p-4 max-width-lg" style="max-width: 700px; margin: 0 auto;">
+                        <h2 class="h5 fw-bold mb-3 text-white"><i class="fas fa-id-card text-info me-2"></i> Driver Credentials Verification</h2>
+                        <p class="text-muted small">Before boarding an auto or cab, cross-check their vehicle registration plate number against official databases verified by municipal law enforcement.</p>
+                        
+                        <div class="d-flex gap-2 mt-4">
+                            <input type="text" id="driver-search-plate" class="form-control bg-dark text-white border-glass" placeholder="Enter License Plate (e.g., MH12AB1234)">
+                            <button id="btn-driver-verify" class="btn glow-btn-primary px-4"><i class="fas fa-search"></i> Verify</button>
+                        </div>
+                        
+                        <div id="driver-verification-result">
+                            <!-- Populated with alerts -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- TAB 5: COMPLAINTS PORTAL                   -->
+                <!-- ========================================== -->
+                <section id="complaints-panel" class="app-panel d-none-section m-4">
+                    <div class="row">
+                        <div class="col-lg-5">
+                            <div class="card glass-panel p-4 h-100">
+                                <h2 class="h5 fw-bold mb-3 text-white"><i class="fas fa-edit text-info me-2"></i> Report Unsafe Incident</h2>
+                                <p class="text-muted small">File details regarding harassment, reckless driving, or suspicious routes. Reports are logged securely and shared with transit administrators.</p>
+                                
+                                <form id="complaint-form" class="mt-3">
+                                    <div class="mb-2">
+                                        <label class="small text-muted mb-1">Vehicle License Plate</label>
+                                        <input type="text" id="comp-vehicle" class="form-control form-control-sm bg-dark text-white border-glass" required placeholder="MH12AB1234">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="small text-muted mb-1">Driver Name (If known)</label>
+                                        <input type="text" id="comp-driver" class="form-control form-control-sm bg-dark text-white border-glass" placeholder="Amit Verma">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="small text-muted mb-1">Incident Type</label>
+                                        <select id="comp-type" class="form-select form-select-sm bg-dark text-white border-glass">
+                                            <option value="Harassment">Harassment</option>
+                                            <option value="Reckless Behavior">Reckless Behavior / Speeding</option>
+                                            <option value="Suspicious Route">Suspicious Route Detours</option>
+                                            <option value="Other">Other Safety Threat</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="small text-muted mb-1">Date & Time of Incident</label>
+                                        <input type="datetime-local" id="comp-date" class="form-control form-control-sm bg-dark text-white border-glass" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="small text-muted mb-1">Incident Description</label>
+                                        <textarea id="comp-desc" rows="3" class="form-control form-control-sm bg-dark text-white border-glass" required placeholder="Enter event timeline..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm glow-btn-primary w-100">Submit Report</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-lg-7">
+                            <div class="card glass-panel p-4 h-100">
+                                <h2 class="h5 fw-bold mb-3 text-white"><i class="fas fa-list text-primary me-2"></i> Logged Incidents History</h2>
+                                <div class="table-responsive mt-3">
+                                    <table class="table table-dark table-striped table-hover align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Vehicle</th>
+                                                <th>Driver</th>
+                                                <th>Category</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="my-complaints-tbody">
+                                            <!-- Dynamic -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- TAB 6: COMMUNITY ALERTS                    -->
+                <!-- ========================================== -->
+                <section id="alerts-panel" class="app-panel d-none-section m-4">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card glass-panel p-4 h-100">
+                                <h2 class="h5 fw-bold mb-3 text-white"><i class="fas fa-bullhorn text-info me-2"></i> Local Safety Alerts Feed</h2>
+                                <p class="text-muted small">Anonymous safety updates posted by users nearby.</p>
+                                
+                                <div id="community-alerts-container" class="overflow-y-auto mt-3" style="max-height: 480px;">
+                                    <!-- Dynamic -->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card glass-panel p-4 h-100">
+                                <h2 class="h5 fw-bold mb-3 text-white"><i class="fas fa-plus text-primary me-2"></i> Post Anonymous Warning</h2>
+                                <p class="text-muted small">Alert nearby travelers regarding poor conditions, harassment clusters, or street danger zones.</p>
+                                
+                                <form id="alert-form" class="mt-3">
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Warning Title</label>
+                                        <input type="text" id="al-title" class="form-control bg-dark text-white border-glass" placeholder="e.g. Broken Streetlights" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Alert Category</label>
+                                        <select id="al-category" class="form-select bg-dark text-white border-glass">
+                                            <option value="BAD_LIGHTING">Broken/No Lighting</option>
+                                            <option value="SUSPICIOUS_ACTIVITY">Suspicious Gathering</option>
+                                            <option value="HARASSMENT">Harassment/Catcalling Zone</option>
+                                            <option value="UNSAFE_AREA">Unsafe Path / Road Closure</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label text-muted small">Safety Description</label>
+                                        <textarea id="al-desc" rows="4" class="form-control bg-dark text-white border-glass" placeholder="Provide description..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn glow-btn-primary w-100">Broadcast Alert</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- TAB 7: AI CHATBOT GUIDE                    -->
+                <!-- ========================================== -->
+                <section id="chatbot-panel" class="app-panel d-none-section m-4">
+                    <div class="card glass-panel p-4 max-width-lg" style="max-width: 800px; margin: 0 auto;">
+                        <h2 class="h5 fw-bold mb-3 text-white"><i class="fas fa-robot text-info me-2"></i> SafeRide Assistant</h2>
+                        <p class="text-muted small">Ask questions about self-defense, legal safety rights in transport, emergency helpline services, and safety guidance advice.</p>
+                        
+                        <div id="chat-window-body" class="chat-window mb-4 mt-3">
+                            <div class="chat-bubble bot">
+                                Hi! I am your SafeRide safety companion. Ask me anything like:
+                                - How do I defend myself?
+                                - What is a Zero FIR?
+                                - Cab boarding safety tips.
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <input type="text" id="chat-input" class="form-control bg-dark text-white border-glass" placeholder="Ask about rights, self-defense, or hotlines...">
+                            <button id="btn-chat-send" class="btn glow-btn-primary px-4"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- TAB 8: ADMIN CONTROL PANEL                 -->
+                <!-- ========================================== -->
+                <section id="admin-panel" class="app-panel d-none-section m-4">
+                    
+                    <!-- ADMIN METRIC COUNTERS -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <div class="card glass-panel p-3 text-center">
+                                <div class="text-muted small">Registered Users</div>
+                                <h3 id="admin-total-users" class="fw-bold text-white mb-0">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card glass-panel p-3 text-center">
+                                <div class="text-muted small">Active Telemetry Rides</div>
+                                <h3 id="admin-active-rides" class="fw-bold text-info mb-0">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card glass-panel p-3 text-center">
+                                <div class="text-muted small">Active SOS Alarms</div>
+                                <h3 id="admin-active-sos" class="fw-bold text-danger mb-0">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card glass-panel p-3 text-center">
+                                <div class="text-muted small">Logged Complaints</div>
+                                <h3 id="admin-total-complaints" class="fw-bold text-warning mb-0">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ANALYTIC CHARTS -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card glass-panel p-3">
+                                <h4 class="h6 fw-bold text-white mb-3">Crimes Index by Area Hotspot</h4>
+                                <canvas id="chart-crimes-by-area" style="max-height: 220px;"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card glass-panel p-3">
+                                <h4 class="h6 fw-bold text-white mb-3">SOS Dispatches Distribution</h4>
+                                <canvas id="chart-sos-categories" style="max-height: 220px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- USERS AND COMPLAINTS TABLES -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card glass-panel p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="h6 fw-bold text-white mb-0"><i class="fas fa-users-cog text-info me-1"></i> User Accounts Security</h4>
+                                    <a href="#" id="btn-export-users-admin" class="btn btn-outline-info btn-xs border-glass text-white py-1 px-2" style="font-size: 0.7rem;">
+                                        <i class="fas fa-file-download me-1"></i> Export Users JSON
+                                    </a>
+                                </div>
+                                <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                                    <table class="table table-dark table-striped table-hover align-middle small">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Phone</th>
+                                                <th>Role</th>
+                                                <th>State</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="admin-users-tbody">
+                                            <!-- Dynamic -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card glass-panel p-3 h-100">
+                                <h4 class="h6 fw-bold text-white mb-3"><i class="fas fa-exclamation-triangle text-warning me-1"></i> Admin Complaint Status Registry</h4>
+                                <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                                    <table class="table table-dark table-striped table-hover align-middle small">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Vehicle</th>
+                                                <th>Category</th>
+                                                <th>Snippet</th>
+                                                <th>Status Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="admin-complaints-tbody">
+                                            <!-- Dynamic -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+        </div>
+    </div>
+
+    <!-- Sidebar Mobile Backdrop Overlay -->
+    <div id="sidebar-backdrop" class="sidebar-overlay"></div>
+
+    <!-- JS Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/mockData.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
